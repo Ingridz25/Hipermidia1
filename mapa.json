@@ -1,0 +1,36 @@
+{
+  "main": "hall",
+  "exit": "adega",
+  "max_itens": 2,
+  "hall": {
+    "description": "Hall de entrada",
+    "north": "sala de musica",
+    "itens": {
+      "faca": "faca ornamental sem fio"
+    },
+    "use": [
+      {
+        "item": "partitura",
+        "description": "O piano começa a tocar uma música.",
+        "action": ""
+      },
+      {
+        "item": "machado",
+        "description": "O piano foi destruído para sempre.",
+        "action": ""
+      }
+    ]
+  },
+  "sala de musica": {
+    "description": "Essa é a sala de música.",
+    "south": "hall",
+    "west": "adega",
+    "itens": {
+      "partitura": "partitura musical incompleta"
+    }
+  },
+  "adega": {
+    "description": "Adega de vinhos!",
+    "east": "sala de musica"
+  }
+}
