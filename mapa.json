@@ -1,36 +1,151 @@
 {
-  "main": "hall",
-  "exit": "adega",
-  "max_itens": 2,
-  "hall": {
-    "description": "Hall de entrada",
-    "north": "sala de musica",
-    "itens": {
-      "faca": "faca ornamental sem fio"
+  "main": "portao_principal",
+  "exit": "jardim_secreto",
+  "max_itens": 3,
+
+  "rooms": {
+    "portao_principal": {
+      "description": "Portão principal do Castelo do Corvo. Está aberto, mas o saguão a frente parece escuro.",
+      "north": "saguao_principal",
+      "south": "exterior",
+      "itens": {},
+      "monster": null,
+      "use": []
     },
-    "use": [
-      {
-        "item": "partitura",
-        "description": "O piano começa a tocar uma música.",
-        "action": ""
+
+    "saguao_principal": {
+      "description": "O Saguão Principal é vasto e silencioso. Uma escadaria leva ao andar superior.",
+      "south": "portao_principal",
+      "east": "biblioteca",
+      "west": "sala_de_jantar",
+      "up": "corredor_norte",
+      "itens": {
+        "vela": "uma vela de sebo, meio derretida"
       },
-      {
-        "item": "machado",
-        "description": "O piano foi destruído para sempre.",
-        "action": ""
-      }
-    ]
-  },
-  "sala de musica": {
-    "description": "Essa é a sala de música.",
-    "south": "hall",
-    "west": "adega",
-    "itens": {
-      "partitura": "partitura musical incompleta"
+      "monster": null,
+      "use": []
+    },
+
+    "biblioteca": {
+      "description": "Uma biblioteca empoeirada. As estantes estão cheias de livros antigos e um cheiro de mofo paira no ar.",
+      "west": "saguao_principal",
+      "north": "sala_de_leitura",
+      "itens": {
+        "livro_raro": "Um volume antigo sobre alquimia."
+      },
+      "monster": {
+        "name": "golem_de_livros",
+        "description": "Um ser feito de livros amassados se move e bloqueia a saída!",
+        "defeat_item": "vela",
+        "defeat_message": "Você incendeia o golem com a vela! Ele grita e desmorona em cinzas."
+      },
+      "use": []
+    },
+
+    "sala_de_leitura": {
+      "description": "Um pequeno cômodo adjacente à biblioteca, com uma única poltrona e uma mesa.",
+      "south": "biblioteca",
+      "itens": {
+        "chave_prata": "Uma chave de prata com um ornamento em formato de corvo."
+      },
+      "monster": null,
+      "use": []
+    },
+
+    "sala_de_jantar": {
+      "description": "Uma longa mesa de jantar coberta por teias de aranha. Há uma porta trancada a oeste.",
+      "east": "saguao_principal",
+      "west": "cozinha_velha",
+      "itens": {
+        "faca_serrilhada": "Uma faca de pão, grande e serrilhada."
+      },
+      "monster": null,
+      "use": [
+        {
+          "item": "chave_prata",
+          "description": "A chave de prata encaixa na fechadura da porta oeste, que se abre com um rangido.",
+          "action": "add_dir west cozinha_velha"
+        }
+      ]
+    },
+
+    "cozinha_velha": {
+      "description": "A cozinha do castelo. Potes e panelas estão jogados no chão. Há um barril suspeito no canto.",
+      "east": "sala_de_jantar",
+      "itens": {
+        "corda_longa": "Uma corda grossa, talvez útil para amarrar algo."
+      },
+      "monster": {
+        "name": "rato_rei",
+        "description": "Um aglomerado de ratos pequenos forma uma criatura gigante e feroz!",
+        "defeat_item": "faca_serrilhada",
+        "defeat_message": "Você apunhala o Rato Rei com a faca! Os ratos se dispersam aterrorizados."
+      },
+      "use": []
+    },
+
+    "corredor_norte": {
+      "description": "Um longo corredor no segundo andar, com várias tapeçarias rasgadas nas paredes.",
+      "down": "saguao_principal",
+      "east": "quarto_do_rei",
+      "west": "sala_de_armas",
+      "itens": {},
+      "monster": null,
+      "use": []
+    },
+
+    "sala_de_armas": {
+      "description": "Nesta sala, armaduras vazias e armas enferrujadas adornam as paredes. Uma passagem estreita leva ao sul.",
+      "east": "corredor_norte",
+      "south": "escadaria_secreta",
+      "itens": {
+        "elmo": "Um elmo de aço, meio amassado, sem valor de combate."
+      },
+      "monster": null,
+      "use": []
+    },
+
+    "quarto_do_rei": {
+      "description": "O quarto principal, dominado por uma cama com dossel. O ar é frio e pesado.",
+      "west": "corredor_norte",
+      "itens": {
+        "mapa_rasgado": "Um pedaço de mapa indicando um 'Jardim Secreto' no sul."
+      },
+      "monster": {
+        "name": "espectro_guardiao",
+        "description": "O espírito rancoroso do antigo rei protege este lugar e bloqueia seu caminho!",
+        "defeat_item": "livro_raro",
+        "defeat_message": "Você abre o livro de alquimia e lê em voz alta. O espectro se acalma e desaparece com um aceno."
+      },
+      "use": []
+    },
+
+    "escadaria_secreta": {
+      "description": "Uma escadaria de pedra escura desce até um túnel no subsolo. O túnel está bloqueado por escombros.",
+      "north": "sala_de_armas",
+      "down": "jardim_secreto",
+      "itens": {},
+      "monster": null,
+      "use": [
+        {
+          "item": "corda_longa",
+          "description": "Você amarra a corda a um pilar e desce pelo buraco, contornando os escombros.",
+          "action": "add_dir down jardim_secreto"
+        },
+        {
+          "item": "elmo",
+          "description": "Você tenta usar o elmo para cavar, mas não funciona. O elmo quebra.",
+          "action": "consume_item"
+        }
+      ]
+    },
+
+    "jardim_secreto": {
+      "description": "Você encontrou o Jardim Secreto, a saída do castelo! Uma luz suave te espera.",
+      "up": "escadaria_secreta",
+      "itens": {},
+      "monster": null,
+      "use": []
     }
-  },
-  "adega": {
-    "description": "Adega de vinhos!",
-    "east": "sala de musica"
   }
 }
