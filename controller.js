@@ -29,8 +29,15 @@ class Controller {
    */
   processarComando(input) {
     const partes = input.trim().toLowerCase().split(' ');
+    
+    // --- [ALTERAÇÃO AQUI] ---
     const acao = partes[0];
-    const alvo = partes[1];
+    // Pega o resto do array (do índice 1 em diante) e junta com '_'
+    // Ex: "pegue chave prata" -> alvo vira "chave_prata"
+    // Ex: "pegue vela" -> alvo vira "vela"
+    const alvo = partes.slice(1).join('_');
+    // --- [FIM DA ALTERAÇÃO] ---
+
     
     // Se o jogo já acabou, não faça nada
     if (this.model.verificarVitoria()) {
@@ -39,7 +46,7 @@ class Controller {
 
     // Pega as saídas ANTES de tentar mover
     const salaData = this.model.getSalaAtualData();
-    const saidasDisponiveis = Object.keys(salaData).filter(key =>
+    const saidasDisponisveis = Object.keys(salaData).filter(key =>
       key !== 'description' &&
       key !== 'itens' &&
       key !== 'monster' &&
@@ -49,8 +56,25 @@ class Controller {
     // --- LÓGICA DE DECISÃO (O if/else if refatorado) ---
 
     // --- Movimento ---
-    if (saidasDisponiveis.includes(acao)) {
+    if (saidasDisponisveis.includes(acao)) {
       this.mover(acao);
+
+      // [LÓGICA DE GAME OVER QUE ADICIONAMOS]
+      const novaSalaData = this.model.getSalaAtualData();
+      if (novaSalaData.monster) {
+        const inventario = this.model.getInventario();
+        
+        if (!inventario[novaSalaData.monster.defeat_item]) {
+          this.view.mostrarMensagem(`\n--- GAME OVER! ---`);
+          this.view.mostrarMensagem(novaSalaData.monster.description);
+          this.view.mostrarMensagem(`Você não tem o item (${novaSalaData.monster.defeat_item}) para derrotá-lo!`);
+          this.view.mostrarMensagem(`Você morreu e acordou no início do castelo...`);
+          
+          this.model.resetarJogo(); 
+          this.mostrarLocalizacaoAtual(); 
+          return; 
+        }
+      }
     }
     // --- "lista" ---
     else if (acao === 'lista') {
@@ -82,9 +106,9 @@ class Controller {
     } else {
         // Se não venceu, apenas mostre a sala (que pode ter mudado)
         // (Não mostre se o comando foi 'lista', para não poluir)
-        if (acao !== 'lista' && acao !== 'use' && !saidasDisponiveis.includes(acao)) {
+        if (acao !== 'lista' && acao !== 'use' && !saidasDisponisveis.includes(acao)) {
              this.mostrarLocalizacaoAtual(); // Mostra o estado atual
-        } else if (saidasDisponiveis.includes(acao) || acao === 'use') {
+        } else if (saidasDisponisveis.includes(acao) || acao === 'use') {
              this.mostrarLocalizacaoAtual(); // Mostra a nova sala após mover ou usar
         }
     }
@@ -93,14 +117,8 @@ class Controller {
   // --- Funções de Ação (chamadas por processarComando) ---
 
   mover(direcao) {
-    const salaData = this.model.getSalaAtualData();
-    
-    // Lógica de bloqueio por monstro (do seu 'else if' de movimento)
-    if (salaData.monster) {
-      this.view.mostrarMensagem(`Você não pode sair! O ${salaData.monster.name} bloqueia seu caminho!`);
-    } else {
-      this.model.mover(direcao); // O Model atualiza a salaAtual
-    }
+    // A lógica de bloqueio foi removida daqui.
+    this.model.mover(direcao); // O Model atualiza a salaAtual
   }
 
   listarInventario() {
@@ -157,7 +175,7 @@ class Controller {
     
     // Pede ao Model para processar o "use"
     const resultado = this.model.usarItem(item);
-    
+
     // O Model retorna uma lista de mensagens, manda a View imprimir todas
     resultado.mensagens.forEach(msg => {
       this.view.mostrarMensagem(msg);

@@ -1,12 +1,13 @@
 // 1. IMPORTAR OS DADOS
-const mapa = require('./mapa.json');
+// [MUDANÇA 1] Renomeado para 'mapaOriginal' para guardarmos o "molde"
+const mapaOriginal = require('./mapa.json');
 
 // 2. CLASSE PARA GUARDAR O ESTADO QUE MUDA
 class GameState {
   constructor() {
-    this.salaAtual = mapa.main;
+    this.salaAtual = mapaOriginal.main; // Usa o mapaOriginal
     this.inventario = {};
-    this.maxItens = mapa.max_itens;
+    this.maxItens = mapaOriginal.max_itens; // Usa o mapaOriginal
   }
 }
 
@@ -17,8 +18,12 @@ class Model {
     if (Model.instance) {
       return Model.instance;
     }
-    // Se não, crie a instância
-    this.mapa = mapa;
+    
+    // [MUDANÇA 2] Criamos uma CÓPIA do mapa para ser modificada.
+    // Se usássemos o 'mapaOriginal' direto, os itens pegos e monstros
+    // mortos NUNCA seriam resetados.
+    this.mapa = JSON.parse(JSON.stringify(mapaOriginal)); 
+    
     this.gameState = new GameState();
     Model.instance = this;
   }
@@ -39,24 +44,15 @@ class Model {
 
   // --- Funções para MODIFICAR o estado (Lógica do Jogo) ---
 
-  /**
-   * Tenta mover o jogador para uma nova direção.
-   * @param {string} direcao - A direção (ex: "north")
-   */
   mover(direcao) {
     const salaData = this.getSalaAtualData();
     if (salaData[direcao]) {
       this.gameState.salaAtual = salaData[direcao];
-      return true; // Movido com sucesso
+      return true; 
     }
-    return false; // Não foi possível mover
+    return false;
   }
 
-  /**
-   * Tenta pegar um item da sala.
-   * Retorna um código de status.
-   * @param {string} item - O nome do item
-   */
   pegarItem(item) {
     const salaData = this.getSalaAtualData();
     if (!salaData.itens || !salaData.itens[item]) {
@@ -66,17 +62,11 @@ class Model {
       return "cheio";
     }
 
-    // Sucesso
     this.gameState.inventario[item] = salaData.itens[item];
     delete salaData.itens[item];
     return "sucesso";
   }
 
-  /**
-   * Tenta deixar um item na sala.
-   * Retorna um código de status.
-   * @param {string} item - O nome do item
-   */
   deixarItem(item) {
     if (!this.gameState.inventario[item]) {
       return "nao_tem";
@@ -84,92 +74,66 @@ class Model {
 
     const salaData = this.getSalaAtualData();
     if (!salaData.itens) {
-      salaData.itens = {}; // Cria o "container" de itens se não existir
+      salaData.itens = {}; 
     }
 
-    // Sucesso
     salaData.itens[item] = this.gameState.inventario[item];
     delete this.gameState.inventario[item];
     return "sucesso";
   }
 
-  /**
-   * Processa uma ação de "use" (função movida do seu jogo.js)
-   * @param {string} acaoString - Ex: "add_dir west cozinha_velha"
-   * @param {string} itemUsado - Ex: "elmo"
-   * @returns {string} - A mensagem de resultado da ação
-   */
   processarAcao(acaoString, itemUsado) {
     const dadosDaSala = this.getSalaAtualData();
     const partes = acaoString.split(' ');
     const comandoAcao = partes[0];
     let mensagemAcao = "";
-
-    // ATENÇÃO: Seu código original tinha "add_dir" e "consume_item".
-    // Seu JSON tem "abrir nova direção" e "sumir com item".
-    // Para seu código funcionar, você deve ATUALIZAR O JSON
-    // para que as ações sejam:
-    // "action": "add_dir west cozinha_velha" (na sala_de_jantar)
-    // "action": "add_dir down jardim_secreto" (na escadaria_secreta)
-    // "action": "consume_item" (para o elmo)
     
-    // Esta lógica é a MESMA que você já tinha:
     switch (comandoAcao) {
       case 'add_dir':
         const direcao = partes[1];
         const salaDestino = partes[2];
-        dadosDaSala[direcao] = salaDestino; // Modifica o estado do mapa
+        dadosDaSala[direcao] = salaDestino; 
         mensagemAcao = `(Uma nova passagem para ${direcao} foi aberta!)`;
         break;
       
       case 'consume_item':
-        delete this.gameState.inventario[itemUsado]; // Modifica o inventário
+        delete this.gameState.inventario[itemUsado]; 
         mensagemAcao = `(O ${itemUsado} foi quebrado ou consumido.)`;
         break;
 
       default:
         mensagemAcao = `(Ação desconhecida: ${acaoString})`;
     }
-    return mensagemAcao; // Retorna a mensagem para o Controller/View
+    return mensagemAcao; 
   }
 
-  /**
-   * Tenta usar um item.
-   * @param {string} item - O nome do item
-   * @returns {object} - Um objeto com as mensagens a serem exibidas
-   */
   usarItem(item) {
     const salaData = this.getSalaAtualData();
     const inventario = this.getInventario();
     let mensagens = [];
     let itemFoiUsado = false;
 
-    // 1. Validar se tem o item (lógica movida do seu "else if (acao === 'use')")
     if (!inventario[item]) {
       mensagens.push(`Você não tem "${item}" no seu inventário.`);
       return { mensagens };
     }
 
-    // 2. Verificação de COMBATE
     if (salaData.monster && item === salaData.monster.defeat_item) {
       mensagens.push(salaData.monster.defeat_message);
-      salaData.monster = null; // MODIFICA O MODELO
+      salaData.monster = null; 
       itemFoiUsado = true;
     }
     
-    // 3. Verificação de INTERAÇÃO
     if (salaData.use && !itemFoiUsado) {
       const interacao = salaData.use.find(u => u.item === item);
       if (interacao) {
         mensagens.push(interacao.description);
-        // Processa a ação (que muda o Model)
         const msgAcao = this.processarAcao(interacao.action, item);
         mensagens.push(msgAcao);
         itemFoiUsado = true;
       }
     }
 
-    // 4. Se não fez nada
     if (!itemFoiUsado) {
       mensagens.push(`Não há como usar "${item}" aqui.`);
     }
@@ -177,12 +141,19 @@ class Model {
     return { mensagens };
   }
 
-  /**
-   * Verifica se o jogador venceu.
-   * @returns {boolean}
-   */
   verificarVitoria() {
-    return this.gameState.salaAtual === this.mapa.exit;
+    return this.gameState.salaAtual === mapaOriginal.exit; // Usa o mapaOriginal
+  }
+
+  /**
+   * [MUDANÇA 3 - A FUNÇÃO QUE FALTAVA]
+   * Reseta o jogo ao estado inicial.
+   */
+  resetarJogo() {
+    // Restaura o mapa para o estado original (com todos os itens e monstros)
+    this.mapa = JSON.parse(JSON.stringify(mapaOriginal));
+    // Reseta o estado do jogador (posição e inventário)
+    this.gameState = new GameState();
   }
 
 } // Fim da classe Model

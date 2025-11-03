@@ -1,7 +1,7 @@
 {
   "main": "portao_principal",
   "exit": "jardim_secreto",
-  "max_itens": 3,
+  "max_itens": 2,
 
   "rooms": {
     "portao_principal": {
